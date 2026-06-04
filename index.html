@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#0a0a1a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FS_SafeBuy"/>
+<title>FS_SafeBuy</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#0a0a1a;overflow-x:hidden;font-family:'Tajawal',sans-serif}
+input{font-family:'Tajawal',sans-serif}
+button{font-family:'Tajawal',sans-serif}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const stores = [
+  {id:1,name:"نون",website:"noon.com",trustScore:94,badge:true,category:"إلكترونيات",rating:4.7,reviews:1284,strengths:["شحن سريع","خدمة عملاء ممتازة","إرجاع سهل"],weaknesses:["أسعار مرتفعة أحياناً"],logo:"🛍️",color:"#FFE600"},
+  {id:2,name:"أمازون",website:"amazon.sa",trustScore:97,badge:true,category:"متعدد",rating:4.9,reviews:8421,strengths:["تنوع هائل","ضمان المشتري","توصيل Prime"],weaknesses:["بعض البائعين غير موثوقين"],logo:"📦",color:"#FF9900"},
+  {id:3,name:"متجر الظل",website:"shadow-shop.net",trustScore:31,badge:false,category:"ملابس",rating:1.9,reviews:43,strengths:["أسعار منخفضة"],weaknesses:["لا معلومات اتصال","شكاوى متكررة","تأخير في التوصيل"],logo:"👕",color:"#666"},
+  {id:4,name:"جرير",website:"jarir.com",trustScore:89,badge:true,category:"إلكترونيات",rating:4.5,reviews:3102,strengths:["متجر سعودي موثوق","ضمان رسمي","فروع واسعة"],weaknesses:["نادراً تأخر التوصيل"],logo:"📚",color:"#006B3C"},
+];
+
+const reviews = [
+  {id:1,user:"أحمد م.",rating:5,comment:"تجربة شراء ممتازة، الشحن وصل في يومين والمنتج أصلي 100٪",date:"منذ يومين",storeId:1},
+  {id:2,user:"سارة ع.",rating:4,comment:"خدمة جيدة لكن السعر كان أعلى قليلاً من المتوقع",date:"منذ أسبوع",storeId:1},
+  {id:3,user:"محمد خ.",rating:5,comment:"أفضل تجربة تسوق، المنتج مطابق للوصف تماماً",date:"منذ 3 أيام",storeId:2},
+  {id:4,user:"نورة ف.",rating:1,comment:"المنتج وصل مختلف تماماً عن الصور، لا أنصح بالشراء",date:"منذ يوم",storeId:3},
+];
+
+const C={trusted:"#00E5A0",medium:"#FFB800",danger:"#FF4D6A"};
+const cls=s=>s>=80?"trusted":s>=50?"medium":"danger";
+const lbl=s=>s>=80?"موثوق":s>=50?"متوسط":"يحتاج حذر";
+
+function Badge({lg}){
+  return <span style={{display:"inline-flex",alignItems:"center",gap:lg?6:4,background:"linear-gradient(135deg,rgba(0,229,160,0.18),rgba(0,180,120,0.1))",color:"#00E5A0",border:"1px solid rgba(0,229,160,0.45)",borderRadius:20,padding:lg?"5px 14px":"2px 8px",fontSize:lg?13:10,fontWeight:800,boxShadow:"0 0 8px rgba(0,229,160,0.2)"}}>
+    <svg width={lg?16:12} height={lg?16:12} viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L14.5 4.5H18V8L20.5 10.5L18 13V16.5H14.5L12 19L9.5 16.5H6V13L3.5 10.5L6 8V4.5H9.5L12 2Z" fill="rgba(0,229,160,0.25)" stroke="#00E5A0" strokeWidth="1.5" strokeLinejoin="round"/>
+      <path d="M8.5 11.5L10.5 13.5L15.5 8.5" stroke="#00E5A0" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+    بائع موثوق
+  </span>;
+}
+
+function Stars({r,sz=14}){
+  return <span style={{fontSize:sz,letterSpacing:1}}>{[1,2,3,4,5].map(s=><span key={s} style={{color:s<=Math.round(r)?"#FFB800":"#2a2a3a"}}>★</span>)}</span>;
+}
+
+function Ring({score}){
+  const color=C[cls(score)],r=32,cx=40,cy=40,circ=2*Math.PI*r;
+  return <svg width="80" height="80" style={{transform:"rotate(-90deg)"}}>
+    <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1a1a2e" strokeWidth="7"/>
+    <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth="7" strokeDasharray={`${(score/100)*circ} ${circ}`} strokeLinecap="round" style={{filter:`drop-shadow(0 0 6px ${color})`}}/>
+    <text x={cx} y={cy+1} textAnchor="middle" dominantBaseline="middle" fill={color} fontSize="14" fontWeight="800" style={{transform:`rotate(90deg)`,transformOrigin:`${cx}px ${cy}px`,fontFamily:"Tajawal"}}>{score}%</text>
+  </svg>;
+}
+
+function App(){
+  const [page,setPage]=useState("home");
+  const [store,setStore]=useState(null);
+  const [search,setSearch]=useState("");
+  const [tab,setTab]=useState("overview");
+  const [payStep,setPayStep]=useState(1);
+  const [payMethod,setPayMethod]=useState("card");
+  const [payDone,setPayDone]=useState(false);
+  const [profTab,setProfTab]=useState("activity");
+  const [dashTab,setDashTab]=useState("info");
+
+  const filtered=stores.filter(s=>s.name.includes(search)||s.website.includes(search)||s.category.includes(search));
+  const storeRevs=store?reviews.filter(r=>r.storeId===store.id):[];
+
+  const go=p=>{setPage(p);setPayDone(false);setPayStep(1);};
+  const goStore=s=>{setStore(s);setPage("detail");setTab("overview");};
+
+  const app={minHeight:"100vh",background:"linear-gradient(135deg,#0a0a1a 0%,#0f0f2e 50%,#0a0a1a 100%)",color:"#e8e8f0",fontFamily:"'Tajawal',sans-serif",direction:"rtl",position:"relative"};
+  const wrap={maxWidth:430,margin:"0 auto",position:"relative"};
+  const nav={position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:"rgba(10,10,26,0.96)",backdropFilter:"blur(20px)",borderTop:"1px solid rgba(255,255,255,0.06)",display:"flex",justifyContent:"space-around",padding:"10px 0 20px",zIndex:100};
+  const nb=a=>({display:"flex",flexDirection:"column",alignItems:"center",gap:4,background:"none",border:"none",cursor:"pointer",color:a?"#00E5A0":"#555570",fontSize:10,fontFamily:"inherit",padding:"4px 16px"});
+  const pg={paddingBottom:100,paddingTop:8};
+  const card={margin:"0 20px 14px",background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.07)",borderRadius:16,padding:16};
+  const tabs={display:"flex",margin:"0 20px 20px",background:"rgba(255,255,255,0.03)",borderRadius:12,padding:4};
+  const tb=a=>({flex:1,padding:"8px 0",borderRadius:9,background:a?"rgba(0,229,160,0.15)":"none",color:a?"#00E5A0":"#666680",border:"none",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit"});
+  const btn={width:"100%",padding:"14px",background:"linear-gradient(135deg,#00E5A0,#00b37a)",border:"none",borderRadius:14,color:"#0a0a1a",fontSize:15,fontWeight:900,fontFamily:"inherit",cursor:"pointer",boxShadow:"0 4px 20px rgba(0,229,160,0.3)"};
+  const inp={width:"100%",background:"rgba(255,255,255,0.05)",border:"1px solid rgba(255,255,255,0.1)",borderRadius:10,padding:"12px 14px",color:"#e8e8f0",fontSize:14,fontFamily:"inherit",outline:"none",boxSizing:"border-box"};
+  const pb=(v,c)=>({height:6,borderRadius:3,background:`linear-gradient(90deg,${c} ${v}%,rgba(255,255,255,0.05) 0%)`});
+
+  function StoreCard({s}){
+    const cl=cls(s.trustScore),clr=C[cl];
+    return <div style={{margin:"0 20px 14px",background:"rgba(255,255,255,0.03)",border:`1px solid ${clr}22`,borderRadius:18,padding:16,cursor:"pointer"}} onClick={()=>goStore(s)}>
+      <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:12}}>
+        <div style={{width:48,height:48,borderRadius:12,background:`${s.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{s.logo}</div>
+        <div style={{flex:1}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <span style={{fontSize:16,fontWeight:800}}>{s.name}</span>
+            {s.badge&&<Badge/>}
+          </div>
+          <div style={{fontSize:11,color:"#6666aa"}}>{s.website}</div>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}><Stars r={s.rating}/><span style={{fontSize:11,color:"#6666aa"}}>({s.reviews.toLocaleString()})</span></div>
+        </div>
+        <Ring score={s.trustScore}/>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+        <span style={{fontSize:11,color:"#6666aa"}}>نسبة الثقة</span>
+        <span style={{fontSize:11,color:clr,fontWeight:700}}>{lbl(s.trustScore)}</span>
+      </div>
+      <div style={{height:4,borderRadius:4,background:`linear-gradient(90deg,${clr} ${s.trustScore}%,rgba(255,255,255,0.05) 0%)`}}/>
+    </div>;
+  }
+
+  function Home(){return <div style={pg}>
+    <div style={{padding:"24px 20px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div><h1 style={{fontSize:22,fontWeight:800,margin:0}}>🛡️ FS_SafeBuy</h1><p style={{fontSize:12,color:"#6666aa",margin:"2px 0 0"}}>تحقق قبل أن تشتري</p></div>
+      <div style={{width:40,height:40,borderRadius:"50%",background:"rgba(0,229,160,0.1)",border:"1px solid rgba(0,229,160,0.2)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>🔔</div>
+    </div>
+    <div style={{margin:"0 20px 24px",background:"linear-gradient(135deg,rgba(0,229,160,0.12),rgba(99,102,241,0.12))",border:"1px solid rgba(0,229,160,0.2)",borderRadius:20,padding:20}}>
+      <h2 style={{fontSize:18,fontWeight:800,margin:"0 0 6px"}}>FS_SafeBuy — تسوّق بأمان وثقة</h2>
+      <p style={{fontSize:12,color:"#9999bb",margin:"0 0 16px",lineHeight:1.7}}>نحلل موثوقية المتاجر ونوفر لك تجربة شراء محمية بالكامل</p>
+      <div style={{display:"flex",gap:16}}>
+        {[["١٢٠+","متجر موثق"],["٥٠K+","مستخدم"],["٩٨٪","رضا"]].map(([n,l])=><div key={l} style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:"10px 16px",textAlign:"center"}}><span style={{fontSize:20,fontWeight:900,color:"#00E5A0",display:"block"}}>{n}</span><span style={{fontSize:10,color:"#6666aa"}}>{l}</span></div>)}
+      </div>
+    </div>
+    <div style={{padding:"0 20px 12px",fontSize:14,fontWeight:700,color:"#9999cc"}}>⭐ أعلى المتاجر ثقةً</div>
+    {stores.filter(s=>s.badge).map(s=><StoreCard key={s.id} s={s}/>)}
+    <div style={{padding:"0 20px 12px",fontSize:14,fontWeight:700,color:"#9999cc"}}>🔍 الأخيراً مراجعتها</div>
+    {stores.filter(s=>!s.badge).map(s=><StoreCard key={s.id} s={s}/>)}
+  </div>;}
+
+  function Search(){return <div style={pg}>
+    <div style={{padding:"24px 20px 16px"}}><h1 style={{fontSize:22,fontWeight:800,margin:0}}>🔍 البحث</h1></div>
+    <div style={{margin:"0 20px 24px",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:14,display:"flex",alignItems:"center",gap:10,padding:"12px 16px"}}>
+      <span style={{fontSize:16,color:"#6666aa"}}>🔍</span>
+      <input style={{flex:1,background:"none",border:"none",outline:"none",color:"#e8e8f0",fontSize:14,fontFamily:"inherit"}} placeholder="اسم المتجر أو الموقع..." value={search} onChange={e=>setSearch(e.target.value)}/>
+      {search&&<span style={{cursor:"pointer",fontSize:14,color:"#6666aa"}} onClick={()=>setSearch("")}>✕</span>}
+    </div>
+    {filtered.map(s=><StoreCard key={s.id} s={s}/>)}
+    {filtered.length===0&&<div style={{textAlign:"center",padding:"60px 20px",color:"#6666aa"}}><div style={{fontSize:48,marginBottom:12}}>🔍</div><div style={{fontSize:16,fontWeight:700}}>لا نتائج</div></div>}
+  </div>;}
+
+  function Detail(){
+    if(!store)return null;
+    const cl=cls(store.trustScore),clr=C[cl];
+    return <div style={pg}>
+      <button style={{background:"none",border:"none",cursor:"pointer",color:"#e8e8f0",fontSize:14,fontFamily:"inherit",display:"flex",alignItems:"center",gap:6,padding:"20px 20px 8px"}} onClick={()=>setPage("home")}>← رجوع</button>
+      <div style={{margin:"0 20px 20px",background:`linear-gradient(135deg,${clr}22,${clr}08)`,border:`1px solid ${clr}33`,borderRadius:20,padding:20,display:"flex",gap:16,alignItems:"center"}}>
+        <div style={{width:60,height:60,borderRadius:14,background:`${store.color}22`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26,flexShrink:0}}>{store.logo}</div>
+        <div style={{flex:1}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <h2 style={{margin:0,fontSize:18,fontWeight:900}}>{store.name}</h2>
+            {store.badge&&<Badge lg={true}/>}
+          </div>
+          <div style={{fontSize:11,color:"#6666aa",marginTop:3}}>{store.website}</div>
+          <div style={{display:"inline-block",background:`${C[cl]}22`,color:C[cl],border:`1px solid ${C[cl]}44`,borderRadius:20,padding:"3px 12px",fontSize:12,fontWeight:700,marginTop:6}}>{lbl(store.trustScore)}</div>
+        </div>
+        <Ring score={store.trustScore}/>
+      </div>
+      <div style={tabs}>
+        {[["overview","نظرة عامة"],["reviews","التقييمات"],["pay","الدفع"]].map(([k,v])=><button key={k} style={tb(tab===k)} onClick={()=>setTab(k)}>{v}</button>)}
+      </div>
+      {tab==="overview"&&<>
+        <div style={card}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:"#9999cc"}}>📊 نسبة الثقة التفصيلية</div>
+          {[["جودة المنتجات",88],["خدمة العملاء",92],["سرعة التوصيل",78],["الشفافية",95]].map(([l,v])=><div key={l} style={{marginBottom:10}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><span style={{fontSize:12}}>{l}</span><span style={{fontSize:12,color:clr,fontWeight:700}}>{v}٪</span></div><div style={pb(v,clr)}/></div>)}
+        </div>
+        <div style={card}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:"#9999cc"}}>✅ نقاط القوة</div>
+          {store.strengths.map(s=><div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><span style={{color:"#00E5A0"}}>●</span><span style={{fontSize:13}}>{s}</span></div>)}
+        </div>
+        <div style={card}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:12,color:"#9999cc"}}>⚠️ نقاط تحتاج انتباه</div>
+          {store.weaknesses.map(s=><div key={s} style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}><span style={{color:"#FFB800"}}>●</span><span style={{fontSize:13}}>{s}</span></div>)}
+        </div>
+      </>}
+      {tab==="reviews"&&<>
+        <div style={{...card,display:"flex",alignItems:"center",gap:16}}>
+          <div style={{textAlign:"center"}}><div style={{fontSize:36,fontWeight:900,color:"#FFB800"}}>{store.rating}</div><Stars r={store.rating} sz={16}/><div style={{fontSize:11,color:"#6666aa",marginTop:4}}>{store.reviews.toLocaleString()} تقييم</div></div>
+          <div style={{flex:1}}>{[5,4,3,2,1].map(n=><div key={n} style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}><span style={{fontSize:10,color:"#6666aa",width:8}}>{n}</span><div style={{flex:1,height:4,borderRadius:2,background:"rgba(255,255,255,0.05)"}}><div style={{height:"100%",borderRadius:2,background:"#FFB800",width:`${[75,15,5,3,2][5-n]}%`}}/></div></div>)}</div>
+        </div>
+        {storeRevs.length>0?storeRevs.map(r=><div key={r.id} style={card}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+            <div style={{width:36,height:36,borderRadius:"50%",background:"linear-gradient(135deg,#6366f1,#00E5A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800}}>{r.user[0]}</div>
+            <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>{r.user}</div><div style={{display:"flex",alignItems:"center",gap:6}}><Stars r={r.rating} sz={12}/><span style={{fontSize:10,color:"#6666aa"}}>{r.date}</span></div></div>
+          </div>
+          <p style={{fontSize:13,color:"#ccccdd",margin:0,lineHeight:1.7}}>{r.comment}</p>
+        </div>):<div style={{...card,textAlign:"center",padding:"30px 20px",color:"#6666aa"}}>لا توجد تقييمات لهذا المتجر بعد</div>}
+      </>}
+      {tab==="pay"&&<Payment inline storeName={store.name}/>}
+    </div>;
+  }
+
+  function Payment({inline,storeName}){
+    if(payDone)return <div style={{textAlign:"center",padding:"60px 20px 0"}}>
+      <div style={{width:80,height:80,borderRadius:"50%",background:"rgba(0,229,160,0.15)",border:"2px solid #00E5A0",display:"flex",alignItems:"center",justifyContent:"center",fontSize:36,margin:"0 auto 20px",boxShadow:"0 0 40px rgba(0,229,160,0.3)"}}>✓</div>
+      <h2 style={{fontSize:20,fontWeight:900,margin:"0 0 8px"}}>تم الدفع بنجاح!</h2>
+      <p style={{fontSize:13,color:"#9999bb",margin:"0 0 24px"}}>تم إتمام عملية الشراء بأمان.</p>
+      <div style={card}>
+        {[["المتجر",storeName||"نون"],["المبلغ","٢٤٩.٩٩ ريال"],["الحالة","✓ مكتمل"]].map(([k,v])=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.05)",fontSize:13}}><span style={{color:"#6666aa"}}>{k}</span><span style={{fontWeight:700,color:k==="الحالة"?"#00E5A0":"#e8e8f0"}}>{v}</span></div>)}
+      </div>
+      <button style={btn} onClick={()=>{setPayDone(false);setPayStep(1);go("home");}}>العودة للرئيسية</button>
+    </div>;
+    return <div style={inline?{}:pg}>
+      {!inline&&<div style={{padding:"24px 20px 16px"}}><h1 style={{fontSize:22,fontWeight:800,margin:0}}>💳 الدفع الإلكتروني</h1></div>}
+      <div style={card}>
+        <div style={{display:"flex",justifyContent:"space-between",marginBottom:20}}>
+          {[1,2,3].map(n=><div key={n} style={{display:"flex",alignItems:"center",gap:n<3?8:0}}>
+            <div style={{width:28,height:28,borderRadius:"50%",background:payStep>=n?"rgba(0,229,160,0.2)":"rgba(255,255,255,0.05)",border:`2px solid ${payStep>=n?"#00E5A0":"rgba(255,255,255,0.1)"}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:payStep>=n?"#00E5A0":"#555"}}>{n}</div>
+            {n<3&&<div style={{width:60,height:2,background:payStep>n?"#00E5A0":"rgba(255,255,255,0.08)",borderRadius:1}}/>}
+          </div>)}
+        </div>
+        {payStep===1&&<>
+          <div style={{fontSize:14,fontWeight:700,marginBottom:16}}>اختر طريقة الدفع</div>
+          <div style={{display:"flex",gap:8,marginBottom:20}}>
+            {[["card","💳 بطاقة"],["apple","🍎 Apple Pay"],["stc","📱 STC Pay"]].map(([k,v])=><button key={k} onClick={()=>setPayMethod(k)} style={{flex:1,padding:"12px 8px",background:payMethod===k?"rgba(0,229,160,0.15)":"rgba(255,255,255,0.03)",border:payMethod===k?"1px solid rgba(0,229,160,0.4)":"1px solid rgba(255,255,255,0.07)",borderRadius:12,cursor:"pointer",color:payMethod===k?"#00E5A0":"#888",fontSize:11,fontWeight:700,fontFamily:"inherit"}}>{v}</button>)}
+          </div>
+          {payMethod==="card"&&<div style={{display:"flex",flexDirection:"column",gap:12}}>
+            <div><span style={{fontSize:11,color:"#6666aa",marginBottom:6,display:"block"}}>رقم البطاقة</span><input style={inp} placeholder="•••• •••• •••• ••••"/></div>
+            <div style={{display:"flex",gap:10}}>
+              <div style={{flex:1}}><span style={{fontSize:11,color:"#6666aa",marginBottom:6,display:"block"}}>تاريخ الانتهاء</span><input style={inp} placeholder="MM/YY"/></div>
+              <div style={{flex:1}}><span style={{fontSize:11,color:"#6666aa",marginBottom:6,display:"block"}}>CVV</span><input style={inp} placeholder="•••"/></div>
+            </div>
+          </div>}
+        </>}
+        {payStep===2&&<>
+          <div style={{fontSize:14,fontWeight:700,marginBottom:16}}>تأكيد الطلب</div>
+          {[["المتجر",storeName||"نون"],["المبلغ","٢٤٩.٩٩ ريال"],["طريقة الدفع",payMethod==="card"?"Visa •4242":payMethod==="apple"?"Apple Pay":"STC Pay"]].map(([k,v])=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)",fontSize:13}}><span style={{color:"#6666aa"}}>{k}</span><span style={{fontWeight:700}}>{v}</span></div>)}
+          <div style={{display:"flex",justifyContent:"space-between",padding:"12px 0",fontSize:15}}><span style={{fontWeight:800}}>الإجمالي</span><span style={{fontWeight:900,color:"#00E5A0"}}>٢٤٩.٩٩ ريال</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:8,padding:"10px 14px",background:"rgba(0,229,160,0.08)",borderRadius:10,fontSize:12,color:"#00E5A0"}}>🔒 محمية بتشفير SSL</div>
+        </>}
+        {payStep===3&&<>
+          <div style={{fontSize:14,fontWeight:700,marginBottom:16}}>التحقق بخطوتين</div>
+          <p style={{fontSize:12,color:"#9999bb",margin:"0 0 16px"}}>أدخل رمز التحقق المرسل لرقمك</p>
+          <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:20}}>
+            {[1,2,3,4].map(n=><input key={n} style={{...inp,width:50,textAlign:"center",fontSize:20,fontWeight:800,padding:"12px 0"}} maxLength={1}/>)}
+          </div>
+        </>}
+      </div>
+      <div style={{margin:"0 20px"}}>
+        {payStep<3?<button style={btn} onClick={()=>setPayStep(p=>p+1)}>{payStep===1?"التالي":"تأكيد الطلب"}</button>:<button style={btn} onClick={()=>setPayDone(true)}>إتمام الدفع 🔒</button>}
+        {payStep>1&&<button style={{...btn,background:"rgba(255,255,255,0.05)",color:"#888",boxShadow:"none",marginTop:10}} onClick={()=>setPayStep(p=>p-1)}>رجوع</button>}
+      </div>
+    </div>;
+  }
+
+  function Profile(){
+    return <div style={pg}>
+      <div style={{padding:"24px 20px 16px"}}><h1 style={{fontSize:22,fontWeight:800,margin:0}}>👤 الملف الشخصي</h1></div>
+      <div style={{margin:"0 20px 20px",background:"linear-gradient(135deg,rgba(99,102,241,0.15),rgba(0,229,160,0.08))",border:"1px solid rgba(99,102,241,0.2)",borderRadius:20,padding:20,textAlign:"center"}}>
+        <div style={{width:72,height:72,borderRadius:"50%",background:"linear-gradient(135deg,#6366f1,#00E5A0)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,margin:"0 auto 12px"}}>👤</div>
+        <div style={{fontSize:18,fontWeight:900}}>أحمد محمد</div>
+        <div style={{fontSize:12,color:"#6666aa",marginTop:4}}>ahmed@email.com</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginTop:16}}>
+          {[["٢٤","مشتريات"],["١٢","تقييمات"],["٩٨٪","رضا"]].map(([n,l])=><div key={l} style={{background:"rgba(0,0,0,0.3)",borderRadius:12,padding:"10px 8px",textAlign:"center"}}><div style={{fontSize:18,fontWeight:900,color:"#00E5A0"}}>{n}</div><div style={{fontSize:10,color:"#6666aa"}}>{l}</div></div>)}
+        </div>
+      </div>
+      <div style={tabs}>
+        {[["activity","النشاط"],["payments","المدفوعات"],["settings","الإعدادات"]].map(([k,v])=><button key={k} style={tb(profTab===k)} onClick={()=>setProfTab(k)}>{v}</button>)}
+      </div>
+      {profTab==="activity"&&[["نون","جهاز iPad","٢٤٩ ريال","✓ مكتمل"],["أمازون","سماعات Sony","١٨٩ ريال","✓ مكتمل"],["جرير","كتاب البرمجة","٤٥ ريال","⏳ قيد الشحن"]].map(([st,pr,am,stat])=><div key={pr} style={card}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:14,fontWeight:700}}>{pr}</div><div style={{fontSize:12,color:"#6666aa",marginTop:3}}>{st}</div></div><div style={{textAlign:"left"}}><div style={{fontSize:15,fontWeight:900,color:"#00E5A0"}}>{am}</div><div style={{fontSize:11,color:stat.includes("✓")?"#00E5A0":"#FFB800",marginTop:3}}>{stat}</div></div></div></div>)}
+      {profTab==="payments"&&[["٢٤٩.٩٩","Visa •4242","٢٠٢٦/٦/١"],["١٨٩.٠٠","Apple Pay","٢٠٢٦/٥/٢٨"],["٤٥.٠٠","STC Pay","٢٠٢٦/٥/١٥"]].map(([a,m,d])=><div key={d} style={{...card,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:11,color:"#6666aa"}}>{m}</div><div style={{fontSize:11,color:"#555570",marginTop:3}}>{d}</div></div><div style={{fontSize:15,fontWeight:900}}>{a} ريال</div></div>)}
+      {profTab==="settings"&&[["🔔 الإشعارات",true],["🌙 الوضع الداكن",true],["🌍 اللغة العربية",true],["🔒 التحقق بخطوتين",false]].map(([l,a])=><div key={l} style={{...card,display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:13}}>{l}</span><div style={{width:44,height:24,borderRadius:12,background:a?"rgba(0,229,160,0.3)":"rgba(255,255,255,0.08)",border:`2px solid ${a?"#00E5A0":"rgba(255,255,255,0.1)"}`,position:"relative",cursor:"pointer"}}><div style={{position:"absolute",top:2,right:a?2:18,width:16,height:16,borderRadius:"50%",background:a?"#00E5A0":"#555"}}/></div></div>)}
+    </div>;
+  }
+
+  function Dashboard(){
+    return <div style={pg}>
+      <div style={{padding:"24px 20px 16px"}}><h1 style={{fontSize:22,fontWeight:800,margin:0}}>⚙️ لوحة التحكم</h1></div>
+      <div style={{margin:"0 20px 20px",background:"linear-gradient(135deg,rgba(0,229,160,0.12),rgba(99,102,241,0.12))",border:"1px solid rgba(0,229,160,0.2)",borderRadius:20,padding:20}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+          <div style={{fontSize:32}}>🛍️</div>
+          <div><div style={{fontSize:16,fontWeight:900}}>متجر الإلكترونيات</div><div style={{fontSize:11,color:"#6666aa"}}>electronics-store.com</div></div>
+          <div style={{marginRight:"auto"}}><Ring score={76}/></div>
+        </div>
+        <div style={{display:"inline-flex",alignItems:"center",gap:6,background:"rgba(255,184,0,0.15)",color:"#FFB800",border:"1px solid rgba(255,184,0,0.35)",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:700}}>⏳ قيد المراجعة للحصول على الشارة</div>
+      </div>
+      <div style={tabs}>
+        {[["info","المعلومات"],["stats","الإحصائيات"],["badge","الشارة"]].map(([k,v])=><button key={k} style={tb(dashTab===k)} onClick={()=>setDashTab(k)}>{v}</button>)}
+      </div>
+      {dashTab==="info"&&<div style={card}>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:14,color:"#9999cc"}}>📋 معلومات المتجر</div>
+        {[["اسم المتجر","متجر الإلكترونيات"],["الموقع","electronics-store.com"],["البريد","info@electronics.com"],["الجوال","+966 50 123 4567"]].map(([k,v])=><div key={k} style={{padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}><span style={{fontSize:11,color:"#6666aa",display:"block",marginBottom:4}}>{k}</span><div style={{fontSize:13,fontWeight:600}}>{v}</div></div>)}
+        <button style={{...btn,marginTop:14}}>حفظ التغييرات</button>
+      </div>}
+      {dashTab==="stats"&&<>
+        <div style={card}>
+          {[["🌟 نسبة الثقة",76,"#00E5A0"],["⭐ متوسط التقييم",80,"#FFB800"],["✅ اكتمال الملف",65,"#6366f1"]].map(([l,v,c])=><div key={l} style={{marginBottom:14}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:13}}>{l}</span><span style={{fontSize:13,color:c,fontWeight:700}}>{v}٪</span></div><div style={pb(v,c)}/></div>)}
+        </div>
+        <div style={card}>
+          {[["إجمالي التقييمات","٢٤٧"],["التقييمات الإيجابية","٧٨٪"],["الشكاوى المفتوحة","٣"]].map(([k,v])=><div key={k} style={{display:"flex",justifyContent:"space-between",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)",fontSize:13}}><span style={{color:"#9999bb"}}>{k}</span><span style={{fontWeight:800}}>{v}</span></div>)}
+        </div>
+      </>}
+      {dashTab==="badge"&&<div style={card}>
+        <div style={{textAlign:"center",padding:"10px 0 20px"}}><div style={{fontSize:52,marginBottom:12}}>🏅</div><div style={{fontSize:16,fontWeight:900,marginBottom:6}}>شارة البائع الموثوق</div></div>
+        {[["نسبة ثقة ≥ ٨٠٪",false,"76٪ من 80٪ المطلوبة"],["معلومات اتصال مكتملة",true,"✓ مكتملة"],["٥٠+ تقييم إيجابي",false,"٢٤ تقييم حتى الآن"],["لا شكاوى متكررة",false,"٣ شكاوى مفتوحة"]].map(([c,m,n])=><div key={c} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"}}><span style={{color:m?"#00E5A0":"#FF4D6A",fontSize:16,flexShrink:0}}>{m?"✓":"✗"}</span><div><div style={{fontSize:13,fontWeight:700,marginBottom:2}}>{c}</div><div style={{fontSize:11,color:"#6666aa"}}>{n}</div></div></div>)}
+        <button style={{width:"100%",padding:"13px",background:"linear-gradient(135deg,#FFB800,#ff8c00)",border:"none",borderRadius:12,color:"#0a0a1a",fontSize:14,fontWeight:900,fontFamily:"inherit",cursor:"pointer",marginTop:12}}>التقدم للحصول على الشارة 🏅</button>
+      </div>}
+    </div>;
+  }
+
+  const navItems=[{key:"home",icon:"🏠",label:"الرئيسية"},{key:"search",icon:"🔍",label:"البحث"},{key:"pay",icon:"💳",label:"الدفع"},{key:"profile",icon:"👤",label:"حسابي"},{key:"dashboard",icon:"⚙️",label:"متجري"}];
+
+  return <div style={app}>
+    <div style={{position:"fixed",inset:0,pointerEvents:"none",background:"radial-gradient(ellipse at 20% 20%,rgba(0,229,160,0.04) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(99,102,241,0.06) 0%,transparent 60%)"}}/>
+    <div style={wrap}>
+      {page==="home"&&<Home/>}
+      {page==="search"&&<Search/>}
+      {page==="pay"&&<Payment/>}
+      {page==="profile"&&<Profile/>}
+      {page==="dashboard"&&<Dashboard/>}
+      {page==="detail"&&<Detail/>}
+    </div>
+    {page!=="detail"&&<nav style={nav}>
+      {navItems.map(item=><button key={item.key} style={nb(page===item.key)} onClick={()=>go(item.key)}>
+        <span style={{fontSize:20}}>{item.icon}</span>
+        <span>{item.label}</span>
+      </button>)}
+    </nav>}
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
